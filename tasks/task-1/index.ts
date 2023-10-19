@@ -2,11 +2,15 @@
 @Injectable({ providedIn: 'root' })
 export class dataService {
   private readonly http = inject(HttpClient);
-
+  
+  private cache$: Observable<Data[]>;
   readonly data$ = this.getdata();
 
   private getdata(): Observable<Data[]> {
-    return this.http.get<Data[]>('/data');
+    if (!this.cache$) {
+      this.cache$ = this.http.get<Data[]>('/data').pipe(shareReplay(1));
+    }
+    return this.cache$;
   }
 }
 

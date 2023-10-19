@@ -1,5 +1,6 @@
 @Component({
   selector: 'user-list',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   imports: [NgIf, NgFor],
   template: `
@@ -7,33 +8,42 @@
 
     <section>
       <article
-        *ngFor="let user of users"
-        [class.selected]="user === getSelectedUser()"
+        *ngFor="let user of users; trackBy: trackingFunction"
+        [class.selected]="user.id === selectedUserId"
         (click)="selectUser.emit(user.id)"
       >
-        <h3>{{ getFullName(user.firstName, user.lastName) }}</h3>
+        <h3>{{ user.fullName }}</h3>
 	      <p>{{ user.email }}</p>
       </article>
 
-      <p *ngIf="getSelectedUser()">
+      <p *ngIf="selectedUser">
         Selected User Name:
-        {{ getFullName(getSelectedUser().firstName, getSelectedUser().lastName) }}
+        {{ selectedUser?.fullName }}
       </p>
     </section>
   `,
 })
 export class UserListComponent {
-  @Input() users: any[];
-  @Input() selectedUserId: number | null;
-  @Output() selectUser = new EventEmitter();
+  @Input() users: User[] = [];
+  @Input() selectedUserId: number | null = null;
+  @Output() selectUser = new EventEmitter<number>();
 
-  getFullName(firstName: string, lastName: string): string {
-    return `${firstName} ${lastName}`;
+  trackingFunction(index: number, user: User): number {
+    return user.id;
   }
 
-  getSelectedUser() {
+  get selectedUser(): User | undefined {
     return this.selectedUserId
       ? this.users.find((user) => user.id === this.selectedUserId)
-      : null;
+      : undefined;
   }
+}
+
+// Definition of the User interface
+interface User {
+  id: number;
+  firstName: string;
+  lastName: string;
+  email: string;
+  fullName: string;
 }
